@@ -15,55 +15,7 @@ import {
   useGetallFunctionQuery,
   useUpdateFunctionMutation,
 } from "../store/dynamicApi";
-
-// Mock transactions data
-// const initialTransactions = [
-//   {
-//     id: 1,
-//     type: "income",
-//     amount: 3500,
-//     description: "Salary Payment",
-//     date: "2025-01-15",
-//     imageUrl:
-//       "https://images.pexels.com/photos/730547/pexels-photo-730547.jpeg?auto=compress&cs=tinysrgb&w=150",
-//   },
-//   {
-//     id: 2,
-//     type: "expense",
-//     amount: 120,
-//     description: "Grocery Shopping",
-//     date: "2025-01-14",
-//     imageUrl:
-//       "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=150",
-//   },
-//   {
-//     id: 3,
-//     type: "expense",
-//     amount: 50,
-//     description: "Gas Station",
-//     date: "2025-01-13",
-//     imageUrl:
-//       "https://images.pexels.com/photos/33488/gasoline-gas-station-fuel-refuel.jpg?auto=compress&cs=tinysrgb&w=150",
-//   },
-//   {
-//     id: 4,
-//     type: "income",
-//     amount: 250,
-//     description: "Freelance Project",
-//     date: "2025-01-12",
-//     imageUrl:
-//       "https://images.pexels.com/photos/7681087/pexels-photo-7681087.jpeg?auto=compress&cs=tinysrgb&w=150",
-//   },
-//   {
-//     id: 5,
-//     type: "expense",
-//     amount: 85,
-//     description: "Restaurant Bill",
-//     date: "2025-01-11",
-//     imageUrl:
-//       "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=150",
-//   },
-// ];
+import Swal from "sweetalert2";
 
 function Transactions() {
   const [transactions, setTransactions] = useState();
@@ -79,6 +31,8 @@ function Transactions() {
     useGetallFunctionQuery({
       url: "/transactions/user",
     });
+
+  console.log(transactionsData);
 
   useEffect(() => {
     if (!transactionsLoading) {
@@ -139,11 +93,9 @@ function Transactions() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // In a real app, you'd upload this to a server
-      // For demo, we'll use a placeholder URL
       setFormData((prev) => ({
         ...prev,
-        imageUrl: URL.createObjectURL(file),
+        imageUrl: file, // save the real file object instead of local URL
       }));
     }
   };
@@ -152,20 +104,17 @@ function Transactions() {
     e.preventDefault();
     if (!formData.amount || !formData.description) return;
 
-    const newTransaction = {
-      id: Date.now(),
-      type: formData.type,
-      amount: parseFloat(formData.amount),
-      description: formData.description,
-      date: formData.date,
-      imageUrl: formData.imageUrl,
-    };
+    const data = new FormData();
+    data.append("type", formData.type);
+    data.append("amount", formData.amount);
+    data.append("description", formData.description);
+    data.append("date", formData.date);
+    if (formData.imageUrl) {
+      data.append("image", formData.imageUrl); // send file to backend
+    }
 
-    console.log(newTransaction);
+    createFuntion({ url: "/transactions", formData: data }).unwrap();
 
-    createFuntion({ url: "/transactions", formData: newTransaction }).unwrap();
-
-    setTransactions((prev) => [newTransaction, ...prev]);
     setFormData({
       type: "expense",
       amount: "",
