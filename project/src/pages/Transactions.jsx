@@ -1,86 +1,156 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Download, Calendar, TrendingUp, TrendingDown, X, Upload } from 'lucide-react'
-import * as XLSX from 'xlsx'
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  Download,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  X,
+  Upload,
+} from "lucide-react";
+import * as XLSX from "xlsx";
+import {
+  useCreateFuctionMutation,
+  useGetallFunctionQuery,
+  useUpdateFunctionMutation,
+} from "../store/dynamicApi";
 
 // Mock transactions data
-const initialTransactions = [
-  {
-    id: 1,
-    type: 'income',
-    amount: 3500,
-    description: 'Salary Payment',
-    date: '2025-01-15',
-    imageUrl: 'https://images.pexels.com/photos/730547/pexels-photo-730547.jpeg?auto=compress&cs=tinysrgb&w=150'
-  },
-  {
-    id: 2,
-    type: 'expense',
-    amount: 120,
-    description: 'Grocery Shopping',
-    date: '2025-01-14',
-    imageUrl: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=150'
-  },
-  {
-    id: 3,
-    type: 'expense',
-    amount: 50,
-    description: 'Gas Station',
-    date: '2025-01-13',
-    imageUrl: 'https://images.pexels.com/photos/33488/gasoline-gas-station-fuel-refuel.jpg?auto=compress&cs=tinysrgb&w=150'
-  },
-  {
-    id: 4,
-    type: 'income',
-    amount: 250,
-    description: 'Freelance Project',
-    date: '2025-01-12',
-    imageUrl: 'https://images.pexels.com/photos/7681087/pexels-photo-7681087.jpeg?auto=compress&cs=tinysrgb&w=150'
-  },
-  {
-    id: 5,
-    type: 'expense',
-    amount: 85,
-    description: 'Restaurant Bill',
-    date: '2025-01-11',
-    imageUrl: 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=150'
-  },
-]
+// const initialTransactions = [
+//   {
+//     id: 1,
+//     type: "income",
+//     amount: 3500,
+//     description: "Salary Payment",
+//     date: "2025-01-15",
+//     imageUrl:
+//       "https://images.pexels.com/photos/730547/pexels-photo-730547.jpeg?auto=compress&cs=tinysrgb&w=150",
+//   },
+//   {
+//     id: 2,
+//     type: "expense",
+//     amount: 120,
+//     description: "Grocery Shopping",
+//     date: "2025-01-14",
+//     imageUrl:
+//       "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=150",
+//   },
+//   {
+//     id: 3,
+//     type: "expense",
+//     amount: 50,
+//     description: "Gas Station",
+//     date: "2025-01-13",
+//     imageUrl:
+//       "https://images.pexels.com/photos/33488/gasoline-gas-station-fuel-refuel.jpg?auto=compress&cs=tinysrgb&w=150",
+//   },
+//   {
+//     id: 4,
+//     type: "income",
+//     amount: 250,
+//     description: "Freelance Project",
+//     date: "2025-01-12",
+//     imageUrl:
+//       "https://images.pexels.com/photos/7681087/pexels-photo-7681087.jpeg?auto=compress&cs=tinysrgb&w=150",
+//   },
+//   {
+//     id: 5,
+//     type: "expense",
+//     amount: 85,
+//     description: "Restaurant Bill",
+//     date: "2025-01-11",
+//     imageUrl:
+//       "https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=150",
+//   },
+// ];
 
 function Transactions() {
-  const [transactions, setTransactions] = useState(initialTransactions)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [transactions, setTransactions] = useState();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    type: 'expense',
-    amount: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-    imageUrl: ''
-  })
+    type: "expense",
+    amount: "",
+    description: "",
+    date: new Date().toISOString().split("T")[0],
+    imageUrl: "",
+  });
+  const { data: transactionsData = [], isLoading: transactionsLoading } =
+    useGetallFunctionQuery({
+      url: "/transactions/user",
+    });
+
+  useEffect(() => {
+    if (!transactionsLoading) {
+      setTransactions(transactionsData);
+    }
+  }, [transactionsLoading]);
+
+  const [
+    createFuntion,
+    { isError: CIsError, error: Cerror, data: CData, isLoading: CIsLoading },
+  ] = useCreateFuctionMutation();
+
+  const [
+    updateFunction,
+    { isError: UIsError, error: Uerror, data: UData, isLoading: UIsLoading },
+  ] = useUpdateFunctionMutation();
+
+  useEffect(() => {
+    const showAlert = async (message, icon = "error") => {
+      const toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+      toast.fire({
+        icon: icon,
+        title: message,
+        padding: "10px 20px",
+      });
+    };
+
+    if (CIsError) {
+      showAlert(Cerror?.data?.message);
+    }
+
+    if (UIsError) {
+      showAlert(Uerror?.data?.message);
+    }
+
+    if (CData) {
+      showAlert(CData?.message, "success");
+    }
+
+    if (UData) {
+      showAlert(UData?.message, "success");
+    }
+  }, [CIsError, Cerror, CData, UIsError, Uerror, UData]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleFileUpload = (e) => {
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (file) {
       // In a real app, you'd upload this to a server
       // For demo, we'll use a placeholder URL
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        imageUrl: 'https://images.pexels.com/photos/164527/pexels-photo-164527.jpeg?auto=compress&cs=tinysrgb&w=150'
-      }))
+        imageUrl: URL.createObjectURL(file),
+      }));
     }
-  }
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!formData.amount || !formData.description) return
+    e.preventDefault();
+    if (!formData.amount || !formData.description) return;
 
     const newTransaction = {
       id: Date.now(),
@@ -88,42 +158,46 @@ function Transactions() {
       amount: parseFloat(formData.amount),
       description: formData.description,
       date: formData.date,
-      imageUrl: formData.imageUrl
-    }
+      imageUrl: formData.imageUrl,
+    };
 
-    setTransactions(prev => [newTransaction, ...prev])
+    console.log(newTransaction);
+
+    createFuntion({ url: "/transactions", formData: newTransaction }).unwrap();
+
+    setTransactions((prev) => [newTransaction, ...prev]);
     setFormData({
-      type: 'expense',
-      amount: '',
-      description: '',
-      date: new Date().toISOString().split('T')[0],
-      imageUrl: ''
-    })
-    setIsModalOpen(false)
-  }
+      type: "expense",
+      amount: "",
+      description: "",
+      date: new Date().toISOString().split("T")[0],
+      imageUrl: "",
+    });
+    setIsModalOpen(false);
+  };
 
   const exportToExcel = () => {
-    const exportData = transactions.map(t => ({
+    const exportData = transactions?.map((t) => ({
       Date: new Date(t.date).toLocaleDateString(),
-      Type: t.type.charAt(0).toUpperCase() + t.type.slice(1),
-      Description: t.description,
-      Amount: t.amount,
-      'Net Amount': t.type === 'income' ? t.amount : -t.amount
-    }))
+      Type: t?.type.charAt(0).toUpperCase() + t?.type?.slice(1),
+      Description: t?.description,
+      Amount: t?.amount,
+      "Net Amount": t?.type === "income" ? t?.amount : -t?.amount,
+    }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Transactions')
-    XLSX.writeFile(wb, 'transactions.xlsx')
-  }
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+    XLSX.writeFile(wb, "transactions.xlsx");
+  };
 
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
-  
+    ?.filter((t) => t.type === "income")
+    ?.reduce((sum, t) => sum + t.amount, 0);
+
   const totalExpense = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
+    ?.filter((t) => t.type === "expense")
+    ?.reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <div className="space-y-8">
@@ -160,27 +234,33 @@ function Transactions() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100">Total Income</p>
-              <p className="text-2xl font-bold">${totalIncome.toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                ${totalIncome?.toLocaleString()}
+              </p>
             </div>
             <TrendingUp className="w-8 h-8 text-green-200" />
           </div>
         </div>
-        
+
         <div className="card bg-gradient-to-br from-danger to-red-600 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-100">Total Expense</p>
-              <p className="text-2xl font-bold">${totalExpense.toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                ${totalExpense?.toLocaleString()}
+              </p>
             </div>
             <TrendingDown className="w-8 h-8 text-red-200" />
           </div>
         </div>
-        
+
         <div className="card bg-gradient-to-br from-primary to-blue-600 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100">Net Balance</p>
-              <p className="text-2xl font-bold">${(totalIncome - totalExpense).toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                ${(totalIncome - totalExpense)?.toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
@@ -197,15 +277,25 @@ function Transactions() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Date</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Type</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Description</th>
-                <th className="text-right py-4 px-4 font-medium text-gray-700">Amount</th>
-                <th className="text-center py-4 px-4 font-medium text-gray-700">Receipt</th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">
+                  Date
+                </th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">
+                  Type
+                </th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">
+                  Description
+                </th>
+                <th className="text-right py-4 px-4 font-medium text-gray-700">
+                  Amount
+                </th>
+                <th className="text-center py-4 px-4 font-medium text-gray-700">
+                  Receipt
+                </th>
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction, index) => (
+              {transactions?.map((transaction, index) => (
                 <motion.tr
                   key={transaction.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -220,12 +310,14 @@ function Transactions() {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                      transaction.type === 'income' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {transaction.type === 'income' ? (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        transaction.type === "income"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {transaction.type === "income" ? (
                         <TrendingUp className="w-3 h-3 mr-1" />
                       ) : (
                         <TrendingDown className="w-3 h-3 mr-1" />
@@ -233,19 +325,28 @@ function Transactions() {
                       {transaction.type}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-900">{transaction.description}</td>
-                  <td className={`py-4 px-4 text-right font-semibold ${
-                    transaction.type === 'income' ? 'text-success' : 'text-danger'
-                  }`}>
-                    {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toLocaleString()}
+                  <td className="py-4 px-4 text-gray-900">
+                    {transaction.description}
+                  </td>
+                  <td
+                    className={`py-4 px-4 text-right font-semibold ${
+                      transaction.type === "income"
+                        ? "text-success"
+                        : "text-danger"
+                    }`}
+                  >
+                    {transaction.type === "income" ? "+" : "-"}$
+                    {transaction.amount.toLocaleString()}
                   </td>
                   <td className="py-4 px-4 text-center">
                     {transaction.imageUrl ? (
-                      <img 
-                        src={transaction.imageUrl} 
-                        alt="Receipt" 
+                      <img
+                        src={transaction.imageUrl}
+                        alt="Receipt"
                         className="w-10 h-10 rounded-lg object-cover mx-auto cursor-pointer hover:scale-110 transition-transform"
-                        onClick={() => window.open(transaction.imageUrl, '_blank')}
+                        onClick={() =>
+                          window.open(transaction.imageUrl, "_blank")
+                        }
                       />
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -276,7 +377,9 @@ function Transactions() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Add Transaction</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Add Transaction
+                </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -365,7 +468,9 @@ function Transactions() {
                       Click to upload receipt
                     </label>
                     {formData.imageUrl && (
-                      <p className="text-sm text-green-600 mt-2">Image uploaded!</p>
+                      <p className="text-sm text-green-600 mt-2">
+                        Image uploaded!
+                      </p>
                     )}
                   </div>
                 </div>
@@ -378,10 +483,7 @@ function Transactions() {
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="flex-1 btn-primary"
-                  >
+                  <button type="submit" className="flex-1 btn-primary">
                     Add Transaction
                   </button>
                 </div>
@@ -391,7 +493,7 @@ function Transactions() {
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
-export default Transactions
+export default Transactions;

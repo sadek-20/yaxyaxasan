@@ -30,18 +30,17 @@ function LoginPage({ onLogin }) {
     if (isError) showAlert(error?.data?.msg);
     if (data) {
       showAlert(data?.message, "success");
-      // navigate("/");
-      window.location.href = "/";
+      navigate("/dashboard");
     }
   }, [isError, error, data]);
-
   useEffect(() => {
     if (data?.token) {
+      console.log(data);
       localStorage.setItem(
         "user",
         JSON.stringify({
           token: data.token,
-          id: data?.user?.id,
+          id: data?._id,
         })
       );
     }
