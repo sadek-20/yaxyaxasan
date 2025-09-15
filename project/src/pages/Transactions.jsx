@@ -32,8 +32,6 @@ function Transactions() {
       url: "/transactions/user",
     });
 
-  console.log(transactionsData);
-
   useEffect(() => {
     if (!transactionsLoading) {
       setTransactions(transactionsData);
