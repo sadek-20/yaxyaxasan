@@ -17,10 +17,13 @@ const navItems = [
   { path: "/settings", icon: SettingsIcon, label: "Settings" },
 ];
 
-function Layout({ onLogout }) {
+function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-
+  const onLogout = () => {
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop Sidebar */}

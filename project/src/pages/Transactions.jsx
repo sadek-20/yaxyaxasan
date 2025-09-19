@@ -49,7 +49,7 @@ function Transactions() {
   ] = useUpdateFunctionMutation();
 
   useEffect(() => {
-    const showAlert = async (message, icon = "error") => {
+    const showAlert = async (msg, icon = "error") => {
       const toast = Swal.mixin({
         toast: true,
         position: "top-end",
@@ -58,25 +58,25 @@ function Transactions() {
       });
       toast.fire({
         icon: icon,
-        title: message,
+        title: msg,
         padding: "10px 20px",
       });
     };
 
     if (CIsError) {
-      showAlert(Cerror?.data?.message);
+      showAlert(Cerror?.data?.msg);
     }
 
     if (UIsError) {
-      showAlert(Uerror?.data?.message);
+      showAlert(Uerror?.data?.msg);
     }
 
     if (CData) {
-      showAlert(CData?.message, "success");
+      showAlert(CData?.msg, "success");
     }
 
     if (UData) {
-      showAlert(UData?.message, "success");
+      showAlert(UData?.msg, "success");
     }
   }, [CIsError, Cerror, CData, UIsError, Uerror, UData]);
 
@@ -108,8 +108,10 @@ function Transactions() {
     data.append("description", formData.description);
     data.append("date", formData.date);
     if (formData.imageUrl) {
-      data.append("image", formData.imageUrl); // send file to backend
+      data.append("imageUrl", formData.imageUrl); // send file to backend
     }
+
+    console.log(data.get("imageUrl"));
 
     createFuntion({ url: "/transactions", formData: data }).unwrap();
 
